@@ -1,0 +1,35 @@
+name: SonarQube
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # --legacy-peer-deps es útil en Juice Shop porque suele tener conflictos de versiones
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # Necesario si usas tu propio servidor SonarQube
+        with:
+          args: >
+            -Dsonar.projectKey=hands-on-sonarqube-juiceshop
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/frontend/node_modules/**
+            -Dsonar.javascript.lcov.reportPaths=build/reports/coverage/lcov.info
