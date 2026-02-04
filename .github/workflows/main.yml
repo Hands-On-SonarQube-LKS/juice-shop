@@ -1,0 +1,35 @@
+name: SonarQube
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=hands-on-sonarqube-lks
+            -Dsonar.projectKey=Hands-On-SonarQube-LKS_juice-shop
+            -Dsonar.projectName="Juice Shop"
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/frontend/node_modules/**
+            -Dsonar.javascript.lcov.reportPaths=build/reports/coverage/lcov.info
